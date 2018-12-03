@@ -7,15 +7,25 @@ class Block{
         this.data = data;
         this.previousHash = previousHash;
         this.hash = this._calculateHash();
+        this.nonce=0;
     }
 
     _calculateHash(){
-        return SHA256(this.index + this.timestamp + JSON.stringify(this.data)+this.previousHash).toString();
+        return SHA256(this.index + this.timestamp + JSON.stringify(this.data)+this.previousHash+this.nonce).toString();
     }
+
+        mineBlock(difficulty){
+            while(this.hash.substring(0,difficulty)!==Array(difficulty+1).join("0")){
+                this.nonce++;
+                this.hash = this._calculateHash();
+            }
+            console.log("Block Mined : ",this.hash);
+        }
 }
 class BlockChain{
     constructor(){
         this.chain = [this._createGenesisBlock()];
+        this.difficulty=3;
     }
 
     _createGenesisBlock(){
@@ -25,7 +35,9 @@ class BlockChain{
     
     addBlock(block){
         block.previousHash = this.chain[this.chain.length-1].hash;
-        block.hash = block._calculateHash();
+      //  block.hash = block._calculateHash();
+      //Mining Code
+      block.mineBlock(this.difficulty);
         this.chain.push(block);
     }
 
@@ -67,13 +79,9 @@ class BlockChain{
 let block1 = new Block(1,'2-1-18',{amount:5});
 let block2 = new Block(2,'3-1-18',{amount:10});
 const StarkCoin = new BlockChain();
+console.log('Mining Block 1..');
 StarkCoin.addBlock(block1);
+console.log('Mining Block 2...');
 StarkCoin.addBlock(block2);
-//console.log(JSON.stringify(StarkCoin,null,4));
-console.log(StarkCoin.validateChain());
-StarkCoin.chain[1].data = {amount :9999};
-StarkCoin.chain[1].hash = StarkCoin.chain[1]._calculateHash();
-// console.log(StarkCoin.validateChain());
-//StarkCoin.chain[1].hash = 'a2e6ce7ec1dece55c59d570b9d5544b64d0ffd3138d081b7fedc718ca7801eb';
-console.log(StarkCoin.validateChain());
+
 
