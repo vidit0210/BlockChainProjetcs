@@ -1,10 +1,34 @@
 const SHA256 = require('crypto-js/sha256');
-
+const EC= require('elliptic').ec;
+//Type of Eliptical Curve 
+const ec = new EC('secp256k1');
 class Transaction{
     constructor(fromAddress,toAddress,amount){
         this.fromAddress = fromAddress;
         this.toAddress = toAddress;
         this.amount = amount;
+    }
+
+    //HashToGeneratewithPrivateKey
+    calculateHash(){
+        return SHA256(this.fromAddress + this.toAddress + this.amount);
+    }
+    signTransaction(signKey){
+        if(signKey.getPublic('hex')!==this.fromAddress()){
+            throw new Error("You cannot SIgn Transaction for the other Wallets");
+        }
+        const hashTx = this.calculateHash();
+        const sig = signKey.sign(hashTx,'base64');
+        this.signature =sig.toDER('hex');
+    }
+    isValid(){
+        if(this.fromAddress===null) true;
+
+        if(!this.signature||this.signature.length===0){
+            throw new Error("No signature in this Transaction");
+        }
+        const publicKey = ec.keyFromPublic(this.fromAddress,'hex');
+        return publicKey.verify(this.calculateHash,this.signature);
     }
 }
 class Block{
